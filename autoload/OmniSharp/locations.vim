@@ -133,6 +133,8 @@ function! OmniSharp#locations#Preview(location) abort
 endfunction
 
 function! OmniSharp#locations#SetQuickfix(list, title, ...) abort
+  "type: 'w' | type: 'e'
+  call sort(a:list, function("s:error_warning_comparer"))
   let what = {'title': a:title}
   if a:0
     call extend(what, a:1)
@@ -200,3 +202,13 @@ let &cpoptions = s:save_cpo
 unlet s:save_cpo
 
 " vim:et:sw=2:sts=2
+function! s:error_warning_comparer(leftarg, rightarg)
+  " e < w
+  if a:leftarg['type'] == a:rightarg['type']
+    return 0
+  elseif a:leftarg['type'] < a:rightarg['type']
+    return -1
+  else
+    return 1
+  endif
+endfunction
