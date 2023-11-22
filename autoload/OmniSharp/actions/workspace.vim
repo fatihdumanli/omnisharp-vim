@@ -35,4 +35,111 @@ endfunction
 let &cpoptions = s:save_cpo
 unlet s:save_cpo
 
+function! OmniSharp#actions#workspace#GetSolutionPath() abort
+  if exists('g:OmniSharp_workspace_root')
+    return g:OmniSharp_workspace_root
+  endif
+
+  let current_dir = expand('%:p:h')
+
+  " search for *.sln file
+  let slnFile = s:search_file_extension(current_dir, ".sln")
+
+  if slnFile != v:null
+    let g:OmniSharp_workspace_root = slnFile
+    return slnFile
+  endif
+
+  " search for *.csproj if there's no sln
+  let csprojFile = s:search_file_extension(current_dir, ".csproj")
+
+  if csprojFile == v:null
+    throw "Neither the solution nor the project is found"
+  endif
+
+  let g:OmniSharp_workspace_root = csprojFile
+  return csprojFile
+endfunction
+
+function! OmniSharp#actions#workspace#GetExecutableProjectPath() abort
+  if !exists('g:OmniSharp_workspace_root')
+    call OmniSharp#actions#workspace#GetSolutionPath()
+  endif
+
+  " Get all csproj files
+  let csprojFiles = globpath(g:OmniSharp_workspace_root, '**/*.csproj', 1, 1)
+  let found = 0
+
+  for f in csprojFiles
+    let file_content = readfile(f)
+
+    for line in file_content
+      if line =~ "Microsoft.NET.Sdk.Web" || line =~ "<OutputType>Exe"
+        let found = 1
+        let g:Omnisharp_executable_project_path = f
+        return f
+      endif
+    endfor
+  endfor
+
+  if found == 0
+    throw "Could not find executable project"
+  endif
+endfunction
+
+function! OmniSharp#actions#workspace#GetExecutableDllPath() abort
+  if !exists('g:Omnisharp_executable_project_path')
+    call OmniSharp#actions#workspace#GetExecutableProjectPath()
+  endif
+
+  " Executable project directory
+  let executable_proj_dir = fnamemodify(g:Omnisharp_executable_project_path, ':h')
+
+  let file_name_without_extension = fnamemodify(g:Omnisharp_executable_project_path, ':t:r')
+  let dll_name = file_name_without_extension . ".dll"
+
+  let bin_path = executable_proj_dir . '/bin/Debug'
+  let dllFiles = globpath(bin_path, "**/" . dll_name, 1, 1)
+
+  if len(dllFiles) == 0
+    echo "Building the .NET project..."
+
+    let command = 'dotnet build' 
+    let result = system('cd ' . g:OmniSharp_workspace_root . ' && ' . command)
+  endif
+
+  let dllFiles = globpath(bin_path, "**/" . dll_name, 1, 1)
+
+  if len(dllFiles) == 0
+    throw "No executable found although Vim attempted to build the project!" . " " . g:OmniSharp_workspace_root
+  endif
+
+  return dllFiles[0]
+endfunction
+
+
+" Searchs for given file extension and returns it's path
+function s:search_file_extension(initialDir, extension)
+
+  let current_dir = a:initialDir
+
+  let found = 0
+  let files = systemlist('ls ' . current_dir)
+
+  while found == 0 && current_dir != '/'
+    for f in files
+      if f =~ a:extension
+        let targetFile = f
+        let found = 1
+        return current_dir
+      endif
+    endfor
+    let current_dir = fnamemodify(current_dir, ':h')
+    let files = systemlist('ls ' . current_dir)
+  endwhile
+
+  return v:null
+endfunction
+
+
 " vim:et:sw=2:sts=2
