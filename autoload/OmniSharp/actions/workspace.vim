@@ -102,10 +102,7 @@ function! OmniSharp#actions#workspace#GetExecutableDllPath() abort
   let dllFiles = globpath(bin_path, "**/" . dll_name, 1, 1)
 
   if len(dllFiles) == 0
-    echo "Building the .NET project..."
-
-    let command = 'dotnet build' 
-    let result = system('cd ' . g:OmniSharp_workspace_root . ' && ' . command)
+    call OmniSharp#actions#workspace#BuildSolution()
   endif
 
   let dllFiles = globpath(bin_path, "**/" . dll_name, 1, 1)
@@ -117,6 +114,12 @@ function! OmniSharp#actions#workspace#GetExecutableDllPath() abort
   return dllFiles[0]
 endfunction
 
+function! OmniSharp#actions#workspace#BuildSolution() abort
+   echo "Building the .NET project..."
+
+   let command = 'dotnet build' 
+   let result = system('cd ' . g:OmniSharp_workspace_root . ' && ' . command)
+endfunction
 
 " Searchs for given file extension and returns it's path
 function s:search_file_extension(initialDir, extension)
