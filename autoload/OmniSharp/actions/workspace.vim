@@ -121,14 +121,26 @@ function! OmniSharp#actions#workspace#BuildSolution() abort
    let result = system('cd ' . g:OmniSharp_workspace_root . ' && ' . command)
 endfunction
 
+function! OmniSharp#actions#workspace#GetProjectInfoForFile() abort
+  let current_dir = fnamemodify(expand("%:p"), ':h')
+  let proj_dir = s:search_file_extension(current_dir, "csproj")
+  let csproj_files = globpath(proj_dir, '**/*.csproj', 1, 1)
+
+  if len(csproj_files) != 1
+    throw "Invalid number of projects in the directory: " . len(csproj_files)
+  endif
+
+  let project_name = fnamemodify(csproj_files[0], ':t:r')
+  let directory_path = fnamemodify(csproj_files[0], ':h')
+
+  return {"name": project_name, "path": csproj_files[0], "projectdir": directory_path}
+endfunction
+
 " Searchs for given file extension and returns it's path
 function s:search_file_extension(initialDir, extension)
-
   let current_dir = a:initialDir
-
   let found = 0
   let files = systemlist('ls ' . current_dir)
-
   while found == 0 && current_dir != '/'
     for f in files
       if f =~ a:extension
@@ -140,7 +152,6 @@ function s:search_file_extension(initialDir, extension)
     let current_dir = fnamemodify(current_dir, ':h')
     let files = systemlist('ls ' . current_dir)
   endwhile
-
   return v:null
 endfunction
 
