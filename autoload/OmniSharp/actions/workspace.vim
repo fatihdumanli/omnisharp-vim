@@ -136,6 +136,33 @@ function! OmniSharp#actions#workspace#GetProjectInfoForFile() abort
   return {"name": project_name, "path": csproj_files[0], "projectdir": directory_path}
 endfunction
 
+function! OmniSharp#actions#workspace#GetNamespaceForFile() abort
+    let file_name = fnamemodify(expand("%:p"), ':t')
+
+    " evaluate namespace
+    let proj_info = OmniSharp#actions#workspace#GetProjectInfoForFile()
+
+    let newstr = substitute(expand("%:p"), proj_info.projectdir, '', '')
+    let splitted = split(newstr, '/')
+    let splitted = splitted[0:-2]
+
+    " root dir
+    if len(splitted) == 0
+      return proj_info.name
+    endif
+
+    let ns = proj_info.name
+    let ns = ns . "."
+
+    for word in splitted
+        let ns = ns . word . "."
+    endfor
+
+    " clear the last dot
+    let ns = ns[0:len(ns) - 2]
+    return ns
+endfunction
+
 " Searchs for given file extension and returns it's path
 function s:search_file_extension(initialDir, extension)
   let current_dir = a:initialDir
