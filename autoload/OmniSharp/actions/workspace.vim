@@ -118,7 +118,13 @@ function! OmniSharp#actions#workspace#BuildSolution() abort
    echo "Building the .NET project..."
 
    let command = 'dotnet build' 
-   let result = system('cd ' . g:OmniSharp_workspace_root . ' && ' . command)
+   let result = systemlist('cd ' . g:OmniSharp_workspace_root . ' && ' . command)
+
+   let exit_code = v:shell_error
+
+   if exit_code != 0
+     throw "Failed to build the project - there may some compile errors."
+   endif
 endfunction
 
 function! OmniSharp#actions#workspace#GetProjectInfoForFile() abort
