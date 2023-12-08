@@ -83,13 +83,19 @@ function! OmniSharp#actions#workspace#GetExecutableProjectPath() abort
   endfor
 
   if found == 0
-    throw "Could not find executable project"
+    let g:Omnisharp_executable_project_path = 0
+    return 0
   endif
 endfunction
 
 function! OmniSharp#actions#workspace#GetExecutableDllPath() abort
   if !exists('g:Omnisharp_executable_project_path')
     call OmniSharp#actions#workspace#GetExecutableProjectPath()
+  endif
+
+  " no executable project path - so we exit the function
+  if g:Omnisharp_executable_project_path == 0
+    return 0
   endif
 
   " Executable project directory
