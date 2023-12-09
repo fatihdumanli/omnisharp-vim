@@ -83,8 +83,8 @@ function! OmniSharp#actions#workspace#GetExecutableProjectPath() abort
   endfor
 
   if found == 0
-    let g:Omnisharp_executable_project_path = 0
-    return 0
+    let g:Omnisharp_executable_project_path = v:null
+    return v:null
   endif
 endfunction
 
@@ -94,7 +94,7 @@ function! OmniSharp#actions#workspace#GetExecutableDllPath() abort
   endif
 
   " no executable project path - so we exit the function
-  if g:Omnisharp_executable_project_path == 0
+  if g:Omnisharp_executable_project_path == v:null
     return 0
   endif
 
