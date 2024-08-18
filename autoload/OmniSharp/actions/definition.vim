@@ -21,6 +21,8 @@ function! OmniSharp#actions#definition#Find(...) abort
     let Callback = function('s:CBGotoDefinition', [opts])
   endif
 
+  " The above code defines Callback = s:CBGotoDefinition
+
   if g:OmniSharp_server_stdio
     call s:StdioFind(Callback)
   else
